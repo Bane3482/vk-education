@@ -1,33 +1,94 @@
 package main
 
-/*
-	код писать в этом файле
-	наверняка у вас будут какие-то структуры с методами, глобальные переменные ( тут можно ), функции
-*/
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+)
+
+var currentGame *Game
 
 func main() {
-	/*
-		в этой функции можно ничего не писать,
-		но тогда у вас не будет работать через go run main.go
-		очень круто будет сделать построчный ввод команд тут, хотя это и не требуется по заданию
-	*/
-
 	initGame()
-
-	_ = handleCommand("some command")
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		fmt.Println(handleCommand(scanner.Text()))
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
 }
 
 func initGame() {
-	/*
-		эта функция инициализирует игровой мир - все комнаты
-		если что-то было - оно корректно перезатирается
-	*/
+	tea := &Item{ID: "tea", Name: "чай"}
+	keys := &Item{ID: "keys", Name: "ключи"}
+	notes := &Item{ID: "notes", Name: "конспекты"}
+	backpack := &Item{ID: "backpack", Name: "рюкзак", Wearable: true, ProvidesStorage: true}
+
+	kitchen := &Room{
+		ID: "kitchen", EntryDescription: "кухня, ничего интересного",
+		Furniture: []*Furniture{{Notation: "на столе", Items: []*Item{tea}}},
+	}
+	bedroom := &Room{
+		ID: "bedroom", EntryDescription: "ты в своей комнате", EmptyDescription: "пустая комната",
+		Furniture: []*Furniture{
+			{Notation: "на столе", Items: []*Item{keys, notes}},
+			{Notation: "на стуле", Items: []*Item{backpack}},
+		},
+	}
+	corridor := &Room{ID: "corridor", EntryDescription: "ничего интересного"}
+	street := &Room{ID: "street", EntryDescription: "на улице весна"}
+	door := &Entry{Locked: true}
+
+	transitions := map[string][]*Transition{
+		kitchen.ID: {
+			{Name: "коридор", To: corridor.ID},
+		},
+		bedroom.ID: {
+			{Name: "коридор", To: corridor.ID},
+		},
+		corridor.ID: {
+			{Name: "кухня", To: kitchen.ID},
+			{Name: "комната", To: bedroom.ID},
+			{Name: "улица", To: street.ID, Entry: door},
+		},
+		street.ID: {
+			{Name: "домой", To: corridor.ID, Entry: door},
+		},
+	}
+
+	doorTarget := &Interaction{UseRules: map[string]func(*Game) string{
+		keys.ID: func(_ *Game) string {
+			door.Locked = false
+			return "дверь открыта"
+		},
+	}}
+	corridor.Targets = map[string]*Interaction{"дверь": doorTarget}
+	street.Targets = map[string]*Interaction{"дверь": doorTarget}
+
+	kitchen.Describe = func(g *Game) string {
+		parts := []string{"ты находишься на кухне"}
+		if contents := kitchen.Contents(); contents != "" {
+			parts = append(parts, contents)
+		}
+		task := "надо собрать рюкзак и идти в универ"
+		if g.Player.Equipment[backpack.ID] != nil && g.Player.HasItem(keys.ID) && g.Player.HasItem(notes.ID) {
+			task = "надо идти в универ"
+		}
+		return strings.Join(append(parts, task), ", ")
+	}
+
+	world := &World{
+		Rooms: map[string]*Room{
+			kitchen.ID: kitchen, bedroom.ID: bedroom, corridor.ID: corridor, street.ID: street,
+		},
+		Transitions: transitions,
+	}
+
+	currentGame = NewGame(world, NewPlayer(kitchen))
 }
 
 func handleCommand(command string) string {
-	/*
-		данная функция принимает команду от "пользователя"
-		и наверняка вызывает какой-то другой метод или функцию у "мира" - списка комнат
-	*/
-	return "not implemented"
+	return currentGame.HandleCommand(command)
 }
