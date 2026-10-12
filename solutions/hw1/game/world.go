@@ -12,11 +12,30 @@ type World struct {
 }
 
 type Entry struct {
-	Locked bool
+	Name             string
+	Locked           bool
+	OpenDescription  string
+	CloseDescription string
 }
 
 type Interaction struct {
 	UseRules map[string]func(*Game) string
+}
+
+func CreateEntryInteraction(itemID string, entry *Entry) *Interaction {
+	return &Interaction{
+		UseRules: map[string]func(*Game) string{
+			itemID: func(_ *Game) string {
+				if entry.Locked {
+					entry.Locked = false
+					return entry.OpenDescription
+				}
+
+				entry.Locked = true
+				return entry.CloseDescription
+			},
+		},
+	}
 }
 
 func (w *World) GetTransitions(id string) []*Transition {

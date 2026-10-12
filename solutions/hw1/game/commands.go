@@ -61,6 +61,7 @@ func (g *Game) Use(args []string) string {
 	if item == nil {
 		return "нет предмета в инвентаре - " + args[0]
 	}
+
 	target := g.Player.Location.Targets[args[1]]
 	if target != nil {
 		if rule := target.UseRules[item.ID]; rule != nil {

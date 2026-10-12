@@ -7,17 +7,12 @@ func TestModelWorldIsConfigurable(t *testing.T) {
 	bag := &Item{ID: "bag", Name: "сумка", Wearable: true, ProvidesStorage: true}
 	token := &Item{ID: "token", Name: "жетон"}
 	note := &Item{ID: "note", Name: "записка"}
-	gate := &Entry{Locked: true}
+	gate := &Entry{Name: "калитка", Locked: true, OpenDescription: "калитка открыта", CloseDescription: "калитка закрыта"}
 	workshop := &Room{
 		ID: "workshop", EntryDescription: "мастерская", EmptyDescription: "полки пусты",
 		Furniture: []*Furniture{{Notation: "на полке", Items: []*Item{bag, token, note}}},
 		Targets: map[string]*Interaction{
-			"калитка": {UseRules: map[string]func(*Game) string{
-				token.ID: func(_ *Game) string {
-					gate.Locked = false
-					return "калитка открыта"
-				},
-			}},
+			gate.Name: CreateEntryInteraction(token.ID, gate),
 		},
 	}
 

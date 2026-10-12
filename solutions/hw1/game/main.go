@@ -39,7 +39,12 @@ func initGame() {
 	}
 	corridor := &Room{ID: "corridor", EntryDescription: "ничего интересного"}
 	street := &Room{ID: "street", EntryDescription: "на улице весна"}
-	door := &Entry{Locked: true}
+	door := &Entry{
+		Name:             "дверь",
+		Locked:           true,
+		OpenDescription:  "дверь открыта",
+		CloseDescription: "дверь закрыта",
+	}
 
 	transitions := map[string][]*Transition{
 		kitchen.ID: {
@@ -58,14 +63,10 @@ func initGame() {
 		},
 	}
 
-	doorTarget := &Interaction{UseRules: map[string]func(*Game) string{
-		keys.ID: func(_ *Game) string {
-			door.Locked = false
-			return "дверь открыта"
-		},
-	}}
-	corridor.Targets = map[string]*Interaction{"дверь": doorTarget}
-	street.Targets = map[string]*Interaction{"дверь": doorTarget}
+	doorTarget := CreateEntryInteraction(keys.ID, door)
+
+	corridor.Targets = map[string]*Interaction{door.Name: doorTarget}
+	street.Targets = map[string]*Interaction{door.Name: doorTarget}
 
 	kitchen.Describe = func(g *Game) string {
 		parts := []string{"ты находишься на кухне"}
