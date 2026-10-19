@@ -72,25 +72,20 @@ func TestSearch(t *testing.T) {
 			},
 		},
 		{
-			name: "age",
+			name: "query does not search age",
 			req: SearchRequest{
 				Limit: 3,
 				Query: "9",
 			},
-			want: []User{
-				zoe,
-			},
+			want: []User{},
 		},
 		{
-			name: "gender",
+			name: "query does not search gender",
 			req: SearchRequest{
 				Limit: 3,
 				Query: "female",
 			},
-			want: []User{
-				zoe,
-				ann,
-			},
+			want: []User{},
 		},
 		{
 			name: "go",
