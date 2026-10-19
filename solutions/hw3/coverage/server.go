@@ -25,8 +25,8 @@ var (
 )
 
 type Root struct {
-	ValidHostHeaderersion string `xml:"version,attr"`
-	Rows                  []Row  `xml:"row"`
+	Version string `xml:"version,attr"`
+	Rows    []Row  `xml:"row"`
 }
 
 type Row struct {
